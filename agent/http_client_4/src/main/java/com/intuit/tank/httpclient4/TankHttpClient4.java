@@ -17,6 +17,7 @@ import java.io.ByteArrayInputStream;
 
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
+import java.net.HttpCookie;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
@@ -38,6 +39,7 @@ import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
+import org.apache.http.HttpResponse;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.NTCredentials;
 import org.apache.http.auth.UsernamePasswordCredentials;
@@ -51,6 +53,7 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.client.protocol.HttpClientContext;
+import org.apache.http.client.protocol.ResponseProcessCookies;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.conn.ssl.TrustSelfSignedStrategy;
 import org.apache.http.cookie.Cookie;
@@ -107,11 +110,11 @@ public class TankHttpClient4 implements TankHttpClient {
         httpclient = HttpClients.custom().setSSLSocketFactory(sslsf).build();
         requestConfig = RequestConfig.custom().setSocketTimeout(30000)
         		.setConnectTimeout(30000)
-        		.setCircularRedirectsAllowed(true)
+        		.setCircularRedirectsAllowed(false)
         		.setAuthenticationEnabled(true)
-        		.setRedirectsEnabled(true)
-        		.setCookieSpec(CookieSpecs.DEFAULT)
-                .setMaxRedirects(100).build();
+        		.setRedirectsEnabled(false)
+        		.setCookieSpec(CookieSpecs.STANDARD)
+        		.build();
 
         // Make sure the same context is used to execute logically related
         // requests
@@ -124,11 +127,11 @@ public class TankHttpClient4 implements TankHttpClient {
     public void setConnectionTimeout(long connectionTimeout) {
         requestConfig = RequestConfig.custom().setSocketTimeout(30000)
         		.setConnectTimeout((int) connectionTimeout)
-        		.setCircularRedirectsAllowed(true)
+        		.setCircularRedirectsAllowed(false)
         		.setAuthenticationEnabled(true)
-                .setRedirectsEnabled(true)
-                .setCookieSpec(CookieSpecs.DEFAULT)
-                .setMaxRedirects(100).build();
+                .setRedirectsEnabled(false)
+                .setCookieSpec(CookieSpecs.STANDARD)
+                .build();
         context.setRequestConfig(requestConfig);
     }
 
@@ -409,6 +412,15 @@ public class TankHttpClient4 implements TankHttpClient {
                     LOG.warn(request.getLogUtil().getLogMessage("cannot decode gzip stream: " + e, LogEventType.System));
                 }
             }
+            
+//            if(httpCode == 302 || httpCode == 307) {
+//            	 for (Header h : headers) {
+//            		 if(h.getName().contains("Set-Cookie")) {
+//            			 ResponseProcessCookies responseProcessCookies = new ResponseProcessCookies();
+//            			 responseProcessCookies.process((HttpResponse) response, context);
+//            		 }
+//            	 }
+//            }
             response.setResponseBody(bResponse);
 
         } catch (Exception ex) {
